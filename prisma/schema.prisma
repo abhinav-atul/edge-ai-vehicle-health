@@ -1,0 +1,70 @@
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Vehicle {
+  id          String              @id @default(cuid())
+  name        String
+  vin         String              @unique
+  createdAt   DateTime            @default(now())
+  anomalies   AnomalyEvent[]
+  maintenance MaintenanceRecord[]
+  snapshots   HealthSnapshot[]
+}
+
+model AnomalyEvent {
+  id        String   @id @default(cuid())
+  vehicleId String
+  sensor    String
+  faultType String
+  zScore    Float
+  severity  String
+  duration  Int
+  createdAt DateTime @default(now())
+  vehicle   Vehicle  @relation(fields: [vehicleId], references: [id])
+
+  @@index([vehicleId])
+  @@index([sensor])
+  @@index([severity])
+  @@index([createdAt])
+}
+
+model MaintenanceRecord {
+  id          String    @id @default(cuid())
+  vehicleId   String
+  component   String
+  rulDays     Int
+  servicedAt  DateTime?
+  createdAt   DateTime  @default(now())
+  vehicle     Vehicle   @relation(fields: [vehicleId], references: [id])
+
+  @@index([vehicleId])
+  @@index([component])
+}
+
+model HealthSnapshot {
+  id        String   @id @default(cuid())
+  vehicleId String
+  score     Float
+  createdAt DateTime @default(now())
+  vehicle   Vehicle  @relation(fields: [vehicleId], references: [id])
+
+  @@index([vehicleId])
+  @@index([createdAt])
+}
+
+model DiagnosticSession {
+  id        String   @id @default(cuid())
+  vehicleId String
+  messages  Json
+  createdAt DateTime @default(now())
+
+  @@index([vehicleId])
+  @@index([createdAt])
+}
