@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { DM_Sans, JetBrains_Mono } from "next/font/google";
+import { Toaster } from "sonner";
 import "./globals.css";
 
 const dmSans = DM_Sans({
@@ -28,9 +29,12 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${dmSans.variable} ${jetbrainsMono.variable} h-full antialiased dark`}
+      className={`${dmSans.variable} ${jetbrainsMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full bg-[#0a0a0f] text-white/90">{children}</body>
+      <body className="min-h-full bg-[#fce9ed] text-gray-900">
+        {children}
+        <Toaster theme="light" richColors position="top-right" />
+      </body>
     </html>
   );
 }

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
-const VEHICLE_ID = 'default-vehicle';
+export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
   try {
@@ -12,8 +12,9 @@ export async function GET(request: NextRequest) {
     const severity = searchParams.get('severity');
     const dateFrom = searchParams.get('dateFrom');
     const dateTo = searchParams.get('dateTo');
+    const vehicleId = searchParams.get('vehicle') ?? 'default-vehicle';
 
-    const where: Record<string, unknown> = { vehicleId: VEHICLE_ID };
+    const where: Record<string, unknown> = { vehicleId };
     if (sensor) where.sensor = sensor;
     if (severity) where.severity = severity;
     if (dateFrom || dateTo) {

@@ -1,18 +1,18 @@
 import { NextRequest } from 'next/server';
-import { engine } from '@/lib/engine';
+import { fleetManager } from '@/lib/fleet';
 import { streamDiagnosis, streamMaintenancePlan } from '@/lib/gemini';
 import { prisma } from '@/lib/prisma';
 
 export const dynamic = 'force-dynamic';
-const VEHICLE_ID = 'default-vehicle';
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { message, chatHistory = [], mode = 'diagnose' } = body as {
+    const { message, chatHistory = [], mode = 'diagnose', vehicleId = 'default-vehicle' } = body as {
       message: string;
       chatHistory?: Array<{ role: string; content: string }>;
       mode?: 'diagnose' | 'maintenance';
+      vehicleId?: string;
     };
 
     if (!message) {
@@ -22,6 +22,7 @@ export async function POST(request: NextRequest) {
       });
     }
 
+    const vehicle = fleetManager.getVehicle(vehicleId) ?? fleetManager.getVehicle('default-vehicle')!;
     const encoder = new TextEncoder();
     let fullResponse = '';
 
@@ -31,11 +32,11 @@ export async function POST(request: NextRequest) {
           let generator: AsyncGenerator<string>;
 
           if (mode === 'maintenance') {
-            const rul = engine.getRUL();
-            const healthScore = engine.getHealthScore();
+            const rul = vehicle.engine.getRUL();
+            const healthScore = vehicle.engine.getHealthScore();
             generator = streamMaintenancePlan(rul, healthScore);
           } else {
-            const context = engine.buildDiagnosticContext();
+            const context = vehicle.engine.buildDiagnosticContext();
             generator = streamDiagnosis(message, context, chatHistory);
           }
 
@@ -57,7 +58,7 @@ export async function POST(request: NextRequest) {
             ];
             await prisma.diagnosticSession.create({
               data: {
-                vehicleId: VEHICLE_ID,
+                vehicleId: vehicle.id,
                 messages: messages,
               },
             });

@@ -1,21 +1,20 @@
-import { engine } from '@/lib/engine';
+import { fleetManager } from '@/lib/fleet';
 import { prisma } from '@/lib/prisma';
 
 export const dynamic = 'force-dynamic';
 
-const VEHICLE_ID = 'default-vehicle';
 const TICK_INTERVAL = 300; // ms
 
-// Ensure default vehicle exists
-async function ensureVehicle() {
+// Ensure vehicle exists in DB
+async function ensureVehicle(vehicleId: string, name: string, vin: string) {
   try {
     await prisma.vehicle.upsert({
-      where: { vin: 'EDGE-AI-SIM-001' },
+      where: { vin },
       update: {},
       create: {
-        id: VEHICLE_ID,
-        name: 'Edge AI Fleet Unit 7',
-        vin: 'EDGE-AI-SIM-001',
+        id: vehicleId,
+        name,
+        vin,
       },
     });
   } catch {
@@ -23,8 +22,13 @@ async function ensureVehicle() {
   }
 }
 
-export async function GET() {
-  await ensureVehicle();
+export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url);
+  const vehicleId = searchParams.get('vehicle') ?? 'default-vehicle';
+  
+  const vehicle = fleetManager.getVehicle(vehicleId) ?? fleetManager.getVehicle('default-vehicle')!;
+  
+  await ensureVehicle(vehicle.id, vehicle.name, vehicle.vin);
 
   const encoder = new TextEncoder();
 
@@ -32,14 +36,14 @@ export async function GET() {
     start(controller) {
       const interval = setInterval(async () => {
         try {
-          const data = engine.tick();
+          const data = vehicle.engine.tick();
 
           // Persist anomalies to DB
           for (const anomaly of data.anomalies) {
             try {
               await prisma.anomalyEvent.create({
                 data: {
-                  vehicleId: VEHICLE_ID,
+                  vehicleId: vehicle.id,
                   sensor: anomaly.sensor,
                   faultType: anomaly.faultType,
                   zScore: anomaly.zScore,
@@ -53,11 +57,11 @@ export async function GET() {
           }
 
           // Persist health snapshot every 60s
-          if (engine.getShouldPersistHealth()) {
+          if (vehicle.engine.getShouldPersistHealth()) {
             try {
               await prisma.healthSnapshot.create({
                 data: {
-                  vehicleId: VEHICLE_ID,
+                  vehicleId: vehicle.id,
                   score: data.healthScore,
                 },
               });

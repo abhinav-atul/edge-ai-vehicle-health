@@ -2,14 +2,15 @@
 @import "tailwindcss";
 
 :root {
-  --background: #0a0a0f;
-  --foreground: #e0e0e0;
-  --card-bg: rgba(255, 255, 255, 0.02);
-  --border-color: rgba(255, 255, 255, 0.06);
-  --electric-blue: #00d4ff;
-  --amber-alert: #f59e0b;
-  --critical-red: #ef4444;
-  --success-green: #10b981;
+  --background: #fce9ed;
+  --foreground: #1f1a1b;
+  --card-bg: #ffffff;
+  --border-color: #f0dce1;
+  --brand: #e11d48;        /* rose-600 — "Fast Car" crimson */
+  --brand-dark: #be123c;   /* rose-700 */
+  --amber-alert: #d97706;
+  --critical-red: #dc2626;
+  --success-green: #059669;
 }
 
 @theme inline {
@@ -25,7 +26,12 @@ body {
   font-family: 'DM Sans', sans-serif;
 }
 
-/* Dark theme scrollbar */
+/* Soft elevation for white cards on the pink canvas */
+.bg-white {
+  box-shadow: 0 1px 3px rgba(16, 10, 14, 0.05), 0 12px 30px -20px rgba(190, 18, 60, 0.22);
+}
+
+/* Light theme scrollbar */
 .scrollbar-thin::-webkit-scrollbar {
   width: 4px;
 }
@@ -33,11 +39,11 @@ body {
   background: transparent;
 }
 .scrollbar-thin::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(190, 18, 60, 0.15);
   border-radius: 4px;
 }
 .scrollbar-thin::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.15);
+  background: rgba(190, 18, 60, 0.3);
 }
 
 /* Slide-in animation for anomaly log entries */
@@ -55,23 +61,23 @@ body {
   animation: slideIn 0.3s ease-out;
 }
 
-/* Glow pulse for critical elements */
+/* Glow pulse for critical / brand elements */
 @keyframes glowPulse {
   0%, 100% {
-    box-shadow: 0 0 8px rgba(0, 212, 255, 0.2);
+    box-shadow: 0 0 8px rgba(225, 29, 72, 0.18);
   }
   50% {
-    box-shadow: 0 0 20px rgba(0, 212, 255, 0.4);
+    box-shadow: 0 0 20px rgba(225, 29, 72, 0.38);
   }
 }
 .animate-glow {
   animation: glowPulse 2s ease-in-out infinite;
 }
 
-/* Select dropdown styling for dark theme */
+/* Select dropdown styling for light theme */
 select option {
-  background: #0d0d14;
-  color: rgba(255, 255, 255, 0.8);
+  background: #ffffff;
+  color: #374151;
 }
 
 /* Tabular nums for monospace numbers */

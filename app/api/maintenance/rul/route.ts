@@ -1,8 +1,14 @@
-import { NextResponse } from 'next/server';
-import { engine } from '@/lib/engine';
+import { NextRequest, NextResponse } from 'next/server';
+import { fleetManager } from '@/lib/fleet';
 
-export async function GET() {
-  const rul = engine.getRUL();
+export const dynamic = 'force-dynamic';
+
+export async function GET(request: NextRequest) {
+  const { searchParams } = new URL(request.url);
+  const vehicleId = searchParams.get('vehicle') ?? 'default-vehicle';
+
+  const vehicle = fleetManager.getVehicle(vehicleId) ?? fleetManager.getVehicle('default-vehicle')!;
+  const rul = vehicle.engine.getRUL();
 
   const enriched = rul.map(component => ({
     ...component,
