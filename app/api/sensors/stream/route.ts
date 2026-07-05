@@ -32,9 +32,20 @@ export async function GET(request: Request) {
 
   const encoder = new TextEncoder();
 
+  let intervalId: ReturnType<typeof setInterval>;
+  let heartbeatId: ReturnType<typeof setInterval>;
+  let closed = false;
+
+  const cleanup = () => {
+    closed = true;
+    clearInterval(intervalId);
+    clearInterval(heartbeatId);
+  };
+
   const stream = new ReadableStream({
     start(controller) {
-      const interval = setInterval(async () => {
+      intervalId = setInterval(async () => {
+        if (closed) return;
         try {
           const data = vehicle.engine.tick();
 
@@ -70,34 +81,27 @@ export async function GET(request: Request) {
             }
           }
 
-          const event = `data: ${JSON.stringify(data)}\n\n`;
-          controller.enqueue(encoder.encode(event));
+          if (!closed) {
+            const event = `data: ${JSON.stringify(data)}\n\n`;
+            controller.enqueue(encoder.encode(event));
+          }
         } catch (error) {
           console.error('SSE tick error:', error);
         }
       }, TICK_INTERVAL);
 
       // Heartbeat every 15s
-      const heartbeat = setInterval(() => {
+      heartbeatId = setInterval(() => {
+        if (closed) return;
         try {
           controller.enqueue(encoder.encode(': heartbeat\n\n'));
         } catch {
           // Connection closed
         }
       }, 15000);
-
-      // Cleanup on close
-      const cleanup = () => {
-        clearInterval(interval);
-        clearInterval(heartbeat);
-      };
-
-      // Store cleanup function for abort handling
-      (controller as unknown as { _cleanup: () => void })._cleanup = cleanup;
     },
-    cancel(controller) {
-      const ctrl = controller as unknown as { _cleanup?: () => void };
-      ctrl._cleanup?.();
+    cancel() {
+      cleanup();
     },
   });
 
